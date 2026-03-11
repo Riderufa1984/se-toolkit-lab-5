@@ -1,6 +1,7 @@
 body {
   font-family: sans-serif;
   padding: 2rem;
+  margin: 0;
 }
 
 table {
@@ -47,8 +48,12 @@ tr:nth-child(even) {
 .app-header {
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 1rem;
   margin-bottom: 1rem;
+  padding: 0.5rem;
+  background-color: #f0f0f0;
+  border-radius: 4px;
 }
 
 .app-header h1 {
@@ -58,4 +63,73 @@ tr:nth-child(even) {
 .btn-disconnect {
   padding: 0.25rem 0.75rem;
   font-size: 0.85rem;
+}
+
+/* Navigation */
+.nav-buttons {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.nav-button {
+  padding: 0.5rem 1rem;
+  background-color: #e0e0e0;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.nav-button.active {
+  background-color: #007acc;
+  color: white;
+}
+
+/* Dashboard styles */
+.dashboard {
+  padding: 1rem;
+}
+
+.lab-selector {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.lab-selector select {
+  padding: 0.25rem;
+}
+
+.charts-container {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+  gap: 2rem;
+  padding: 1rem;
+}
+
+.chart-wrapper {
+  background-color: white;
+  padding: 1rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+}
+
+.chart-wrapper h2 {
+  margin-top: 0;
+  text-align: center;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  border: 1px solid #ddd;
+  padding: 0.5rem;
+  text-align: left;
+}
+
+.data-table th {
+  background-color: #f2f2f2;
 }
