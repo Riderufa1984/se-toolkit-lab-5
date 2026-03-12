@@ -61,14 +61,13 @@ async def fetch_logs(since: datetime | None = None) -> list[dict]:
     - The response JSON has shape:
       {"logs": [...], "count": int, "has_more": bool}
     - Handles pagination: keeps fetching while has_more is True
-      - Uses offset-based pagination by tracking how many logs we've fetched
+      - Uses the last log's submitted_at as the new "since" value
     - Returns the combined list of all log dicts from all pages
     """
     all_logs = []
-    offset = 0
 
     while True:
-        params = {"limit": 500, "offset": offset}
+        params = {"limit": 500}
         if since:
             params["since"] = since.isoformat()
 
@@ -86,15 +85,20 @@ async def fetch_logs(since: datetime | None = None) -> list[dict]:
 
             data = response.json()
             logs_batch = data.get("logs", [])
-            
+
             if not logs_batch:
                 break
-                
+
             all_logs.extend(logs_batch)
-            offset += len(logs_batch)
 
             if not data.get("has_more", False):
                 break
+
+            # Use the submitted_at of the last log as the new "since" value
+            last_log = logs_batch[-1]
+            since = datetime.fromisoformat(
+                last_log["submitted_at"].replace("Z", "+00:00")
+            )
 
     return all_logs
 
