@@ -125,6 +125,8 @@ async def load_items(items: list[dict], session: AsyncSession) -> int:
     - Commit after all inserts
     - Return the number of newly created items
     """
+    from sqlmodel import select
+
     new_items_count = 0
 
     # Process labs first
@@ -132,8 +134,6 @@ async def load_items(items: list[dict], session: AsyncSession) -> int:
     for item_dict in items:
         if item_dict["type"] == "lab":
             # Check if lab already exists
-            from sqlmodel import select
-
             existing_lab_result = await session.exec(
                 select(ItemRecord).where(
                     ItemRecord.type == "lab", ItemRecord.title == item_dict["title"]
@@ -145,10 +145,19 @@ async def load_items(items: list[dict], session: AsyncSession) -> int:
                 # Create new lab
                 lab_record = ItemRecord(type="lab", title=item_dict["title"])
                 session.add(lab_record)
-                await session.commit()
-                await session.refresh(lab_record)  # To get the ID
-                lab_mapping[item_dict["lab"]] = lab_record
                 new_items_count += 1
+            else:
+                existing_lab = existing_lab_result.first()
+            
+            # Get the lab record (either existing or newly added)
+            # For newly added, we need to flush to get the ID
+            if not existing_lab:
+                await session.flush()
+                lab_record = session.query(ItemRecord).filter(
+                    ItemRecord.type == "lab", 
+                    ItemRecord.title == item_dict["title"]
+                ).first()
+                lab_mapping[item_dict["lab"]] = lab_record
             else:
                 lab_mapping[item_dict["lab"]] = existing_lab
 
