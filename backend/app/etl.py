@@ -51,23 +51,24 @@ async def fetch_items() -> list[dict]:
 async def fetch_logs(since: datetime | None = None) -> list[dict]:
     """Fetch check results from the autochecker API.
 
-    TODO: Implement this function.
-    - Use httpx.AsyncClient to GET {settings.autochecker_api_url}/api/logs
-    - Pass HTTP Basic Auth using settings.autochecker_email and
+    This function fetches all logs with pagination support.
+    - Uses httpx.AsyncClient to GET {settings.autochecker_api_url}/api/logs
+    - Passes HTTP Basic Auth using settings.autochecker_email and
       settings.autochecker_password
     - Query parameters:
       - limit=500 (fetch in batches)
       - since={iso timestamp} if provided (for incremental sync)
     - The response JSON has shape:
       {"logs": [...], "count": int, "has_more": bool}
-    - Handle pagination: keep fetching while has_more is True
-      - Use the submitted_at of the last log as the new "since" value
-    - Return the combined list of all log dicts from all pages
+    - Handles pagination: keeps fetching while has_more is True
+      - Uses offset-based pagination by tracking how many logs we've fetched
+    - Returns the combined list of all log dicts from all pages
     """
     all_logs = []
+    offset = 0
 
     while True:
-        params = {"limit": 500}
+        params = {"limit": 500, "offset": offset}
         if since:
             params["since"] = since.isoformat()
 
@@ -84,17 +85,16 @@ async def fetch_logs(since: datetime | None = None) -> list[dict]:
                 raise Exception(f"Failed to fetch logs: {response.status_code}")
 
             data = response.json()
-            all_logs.extend(data["logs"])
+            logs_batch = data.get("logs", [])
+            
+            if not logs_batch:
+                break
+                
+            all_logs.extend(logs_batch)
+            offset += len(logs_batch)
 
             if not data.get("has_more", False):
                 break
-
-            # Use the submitted_at of the last log as the new "since" value
-            if data["logs"]:
-                last_log = data["logs"][-1]
-                since = datetime.fromisoformat(
-                    last_log["submitted_at"].replace("Z", "+00:00")
-                )
 
     return all_logs
 
