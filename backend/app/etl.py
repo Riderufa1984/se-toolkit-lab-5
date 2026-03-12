@@ -146,20 +146,12 @@ async def load_items(items: list[dict], session: AsyncSession) -> int:
                 lab_record = ItemRecord(type="lab", title=item_dict["title"])
                 session.add(lab_record)
                 new_items_count += 1
-            else:
-                existing_lab = existing_lab_result.first()
-            
-            # Get the lab record (either existing or newly added)
-            # For newly added, we need to flush to get the ID
-            if not existing_lab:
-                await session.flush()
-                lab_record = session.query(ItemRecord).filter(
-                    ItemRecord.type == "lab", 
-                    ItemRecord.title == item_dict["title"]
-                ).first()
                 lab_mapping[item_dict["lab"]] = lab_record
             else:
                 lab_mapping[item_dict["lab"]] = existing_lab
+
+    # Flush to get IDs for newly created labs
+    await session.flush()
 
     # Process tasks
     for item_dict in items:
